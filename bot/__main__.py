@@ -4,7 +4,7 @@ import logging
 import sys
 
 from telegram.error import TelegramError
-from telegram.ext import Updater
+from telegram.ext import Filters, MessageHandler, Updater
 
 from bot import bot_kwargs
 
@@ -22,6 +22,10 @@ def error(update, context):
 		logging.warning("User '%s' %s", user, error_info)
 
 
+def echo(update, _context):
+	update.effective_chat.send_message(update.effective_message.text)
+
+
 def main():
 	try:
 		updater = Updater(**bot_kwargs)
@@ -30,6 +34,7 @@ def main():
 		sys.exit(1)
 
 	dispatcher = updater.dispatcher
+	dispatcher.add_handler(MessageHandler(Filters.text, echo))
 	dispatcher.add_error_handler(error)
 
 	updater.start_polling()
