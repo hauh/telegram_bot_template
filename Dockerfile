@@ -1,8 +1,9 @@
 FROM python:slim
-ENV PYTHONUNBUFFERED=1
-WORKDIR /opt/project_bot
+WORKDIR /opt/template_bot/
+ENV PYTHONUNBUFFERED=1 \
+	PYTHONDONTWRITEBYTECODE=1
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN python -m pip install --upgrade pip && \
+	pip install --no-cache-dir -r requirements.txt
 COPY bot ./bot
-RUN mkdir data
 CMD ["python", "-m", "bot"]
