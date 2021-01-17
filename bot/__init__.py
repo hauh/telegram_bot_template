@@ -1,11 +1,12 @@
-"""Project Bot package."""
+"""Template Bot package."""
 
 import logging
 import os
 import sys
 
 from telegram import ParseMode
-from telegram.ext import Defaults
+from telegram.error import InvalidToken
+from telegram.ext import Defaults, Updater
 
 logging.basicConfig(
 	level=logging.INFO,
@@ -14,12 +15,13 @@ logging.basicConfig(
 )
 
 try:
-	token = os.environ['TOKEN']
+	updater = Updater(
+		token=os.environ['TOKEN'],
+		defaults=Defaults(parse_mode=ParseMode.MARKDOWN),
+	)
 except KeyError:
 	logging.critical("'TOKEN' environment variable is required.")
 	sys.exit(1)
-
-bot_kwargs = {
-	'token': token,
-	'defaults': Defaults(parse_mode=ParseMode.MARKDOWN)
-}
+except InvalidToken:
+	logging.critical("Invalid token.")
+	sys.exit(1)

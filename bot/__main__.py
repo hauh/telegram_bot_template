@@ -1,12 +1,11 @@
-"""Project Bot."""
+"""Template Bot."""
 
 import logging
-import sys
 
-from telegram.error import TelegramError
-from telegram.ext import Filters, MessageHandler, Updater
+from telegram.error import NetworkError, TelegramError
+from telegram.ext import Filters, MessageHandler
 
-from bot import bot_kwargs
+from bot import updater
 
 
 def error(update, context):
@@ -27,21 +26,18 @@ def echo(update, _context):
 
 
 def main():
-	try:
-		updater = Updater(**bot_kwargs)
-	except TelegramError as err:
-		logging.critical("Telegram connection error: %s", err)
-		sys.exit(1)
-
 	dispatcher = updater.dispatcher
 	dispatcher.add_handler(MessageHandler(Filters.text, echo))
 	dispatcher.add_error_handler(error)
 
-	updater.start_polling()
-	logging.info("Bot started!")
-
-	updater.idle()
-	logging.info("Turned off.")
+	try:
+		updater.start_polling()
+	except NetworkError:
+		logging.critical("Connection failed.")
+	else:
+		logging.info("Bot started!")
+		updater.idle()
+		logging.info("Turned off.")
 
 
 if __name__ == "__main__":
