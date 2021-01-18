@@ -2,10 +2,36 @@
 
 import logging
 
+from telegram.constants import CHAT_PRIVATE
 from telegram.error import NetworkError, TelegramError
-from telegram.ext import Filters, MessageHandler
+from telegram.ext import (
+	CommandHandler, DispatcherHandlerStop, Filters, Handler, MessageHandler
+)
 
 from bot import updater
+
+
+class UpdateFilter(Handler):
+	"""By default bot should be used only in private chats."""
+
+	def __init__(self):
+		super().__init__(callback=None)
+
+	def check_update(self, update):
+		if chat := update.effective_chat:
+			if chat.type == CHAT_PRIVATE:
+				return None
+			logging.warning("Leaving %s '%s'.", chat.type, chat.title)
+			chat.leave()
+		raise DispatcherHandlerStop()
+
+
+def start(update, _context):
+	update.effective_chat.send_message("💜")
+
+
+def clean(update, _context):
+	update.effective_message.delete()
 
 
 def error(update, context):
@@ -19,15 +45,14 @@ def error(update, context):
 			pass
 		user = update.effective_user.username or update.effective_user.id
 		logging.warning("User '%s' %s", user, error_info)
-
-
-def echo(update, _context):
-	update.effective_chat.send_message(update.effective_message.text)
+	start(update, context)
 
 
 def main():
 	dispatcher = updater.dispatcher
-	dispatcher.add_handler(MessageHandler(Filters.text, echo))
+	dispatcher.add_handler(UpdateFilter())
+	dispatcher.add_handler(CommandHandler('start', start))
+	dispatcher.add_handler(MessageHandler(Filters.all, clean))
 	dispatcher.add_error_handler(error)
 
 	try:
