@@ -3,12 +3,12 @@
 import logging
 
 from telegram.constants import CHAT_PRIVATE
-from telegram.error import NetworkError, TelegramError
+from telegram.error import NetworkError
 from telegram.ext import (
 	CommandHandler, DispatcherHandlerStop, Filters, Handler, MessageHandler
 )
 
-from bot import updater
+from bot import updater, with_reply
 
 
 class UpdateFilter(Handler):
@@ -26,26 +26,22 @@ class UpdateFilter(Handler):
 		raise DispatcherHandlerStop()
 
 
-def start(update, _context):
-	update.effective_chat.send_message("💜")
+@with_reply
+def start(_update, _context):
+	"""Bot starts conversation here."""
+	return "💜"
 
 
 def clean(update, _context):
+	"""Last handler to keep bot's message at the bottom of a chat."""
 	update.effective_message.delete()
 
 
 def error(update, context):
-	error_info = f"{context.error.__class__.__name__}: {context.error}"
-	if not update or not update.effective_user:
-		logging.error("Bot %s", error_info)
-	else:
-		try:
-			update.effective_message.delete()
-		except (AttributeError, TelegramError):
-			pass
-		user = update.effective_user.username or update.effective_user.id
-		logging.warning("User '%s' %s", user, error_info)
-	start(update, context)
+	"""Log error and restart conversation if error is from user."""
+	logging.error("%s", f"{context.error.__class__.__name__}: {context.error}")
+	if update and update.effective_user:
+		start(update, context)
 
 
 def main():

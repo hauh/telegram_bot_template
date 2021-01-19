@@ -8,6 +8,8 @@ from telegram import ParseMode
 from telegram.error import InvalidToken
 from telegram.ext import Defaults, Updater
 
+from bot.reply import with_reply
+
 logging.basicConfig(
 	level=logging.INFO,
 	format="%(asctime)s [%(levelname)s] %(funcName)s - %(message)s",
